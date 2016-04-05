@@ -515,23 +515,23 @@
         $end = $app->request->params('End_Date');
         $id = $app->request->params('Cycle_ID');
 
-            $sql = "UPDATE cycle SET Number=?, Start_Date=?, End_Date=? WHERE cycle_ID=?";
+        $sql = "UPDATE cycle SET Number=?, Start_Date=?, End_Date=? WHERE cycle_ID=?";
 
-            $db = getDB();
-            $stmt = $db->prepare($sql);
-            $stmt->bindValue(1, $number);
-            $stmt->bindValue(1, $start);
-            $stmt->bindValue(1, $end);
-            $stmt->bindValue(1, $id);
-            $stmt->execute();
+        $db = getDB();
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(1, $number);
+        $stmt->bindValue(2, $start);
+        $stmt->bindValue(3, $end);
+        $stmt->bindValue(4, $id);
+        $stmt->execute();
 
-            $res = array("Success" => TRUE);
-            $response = $app->response();
-            $response['Content-Type'] = 'application/json';
-            $response->body(json_encode($res));
-            return $response;
+        $res = array("Success" => TRUE);
+        $response = $app->response();
+        $response['Content-Type'] = 'application/json';
+        $response->body(json_encode($res));
+        return $response;
 
-        };
+        
     });
 	$app->run();
     
