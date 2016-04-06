@@ -533,6 +533,21 @@
 
         
     });
+
+    $app->post('/api/submitComment', 'middleWare', function() use ($app){
+        $text = $app->request->params('text');
+        $teacher_ID = $app->request->params('teacher');
+        $scrumlog_ID = $app->request->params('scrumlog');
+
+        $sql = "UPDATE scrumlog set Teacher_ID=?, Remark=?, Completed=FALSE WHERE Scrumlog_ID=?";
+
+        $db = getDB();
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(1, $teacher_ID);
+        $stmt->bindValue(2, $text);
+        $stmt->bindValue(3, $scrumlog_ID);
+        $stmt->execute();
+    });
 	$app->run();
     
     function getLatestScrum($student_ID)
