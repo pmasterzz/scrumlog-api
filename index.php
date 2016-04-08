@@ -88,7 +88,7 @@
         $filterArray = array($date);
 
         $sql = "SELECT sc.Input_Yesterday, sc.Input_Help, sc.Input_Today, sc.Input_Problems, sc.Radio_Help,";
-		$sql .= " sc.Scrumlog_ID, sc.Date, sc.Cycle_ID, sc.Seating, st.Student_ID, p.Firstname, p.Lastname, p.Infix";
+		$sql .= " sc.Scrumlog_ID, sc.Date, sc.Cycle_ID, sc.Seating, st.Student_ID, p.Firstname, p.Lastname, p.Infix, sc.Remark";
 		$sql .= " FROM scrumlog sc LEFT JOIN student st ON sc.Student_ID=st.Student_ID";
 		$sql .= " LEFT JOIN person p ON st.Person_ID=p.Person_ID";
 		$sql .= " WHERE sc.Date = ?";
@@ -137,7 +137,7 @@
 		else{
         $scrumlog = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		
-		if($scrumlog[0]['Radio_Help'] !== '-')
+		if($scrumlog[0]['Radio_Help'] !== '-' && $scrumlog[0]['Radio_Help'] !== NULL)
 			$scrumlog[0]['Radio_Help'] = GetTeacherNameById($scrumlog[0]['Radio_Help']);
 	
 		$response = $app->response();
@@ -259,89 +259,89 @@
     });
     //Log in
     $app->post('/api/login', function() use($app){
-    $username = $app->request->params('username');
-    $password = $app->request->params('password'); 
-    $sql = 'SELECT p.Firstname, p.Infix, p.Lastname, p.Person_ID, p.Password,'
-			.' s.Student_ID, s.Class, s.Seating, s.Phase, t.Teacher_ID, s.Last_Submitted_Scrumlog '
-			. 'FROM person p '
-            . 'LEFT JOIN student s ON p.Person_ID = s.Person_ID '
-            . 'LEFT JOIN teacher t ON p.Person_ID = t.Person_ID '
-            . 'WHERE Username = ?';
-    $db = getDB();
-    $stmt = $db->prepare($sql);
-    $stmt->bindParam(1, $username);
-    $stmt->execute();
-    if ($stmt->rowCount() == 1) 
-    {
-        $person = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-    if (password_verify($password, $person['Password']))
-        {   
-            
-            $token = uniqid();
-            $sql = 'UPDATE person SET Token = ? WHERE Person_ID = ?';
-            $stmt = $db->prepare($sql);
-            $stmt->bindParam(1, $token);
-            $stmt->bindParam(2, $person['Person_ID']);    
-            $stmt->execute();
-            //echo json_encode($person);
-            if ($person['Student_ID'] != NULL)
-                {   
-                    $latest_scrum = getLatestScrum($person['Student_ID']);
-                    
-                    $student = array(
-                        'User' => array(
-                                'Firstname' => $person['Firstname'],
-                                'Lastname' => $person['Lastname'],
-                                'Infix' => $person['Infix'],
-                                'Person_ID' => $person['Person_ID'],
-                                'Student_ID' => $person['Student_ID'],
-                                'Class' => $person['Class'],
-                                'Seating' => $person['Seating'],   
-                                'Last_Submitted_Scrumlog' => $latest_scrum['Date']
-                        ),
-                        'Token' => $token,
-                        'Userlevel' => 'Student'
-					);
-                    $response = $app->response();                    
-                    $response['Content-Type'] = 'application/json';
-                    $response->body(json_encode($student));
-
-                    
-                    return $response; // i think dinky donky
-                }
-            else
-                {
-                    $teacher = array(
-					'User' => array(
-						'Firstname' => $person['Firstname'],
-						'Lastname' => $person['Lastname'],
-						'Infix' => $person['Infix'],
-						'Person_ID' => $person['Person_ID'],
-						'Teacher_ID' => $person['Teacher_ID']
-					),						
-                    'Success' => TRUE,
-                    'Token' => $token,
-					'Userlevel' => 'Teacher'
-                    );
-                    $response = $app->response();
-                    $response['Content-Type'] = 'application/json';
-                    $response->body(json_encode($teacher));
-                    return $response;
-                    
-                    
-                }
-        }
-        else
+        $username = $app->request->params('username');
+        $password = $app->request->params('password'); 
+        $sql = 'SELECT p.Firstname, p.Infix, p.Lastname, p.Person_ID, p.Password,'
+    			.' s.Student_ID, s.Class, s.Seating, s.Phase, t.Teacher_ID, s.Last_Submitted_Scrumlog '
+    			. 'FROM person p '
+                . 'LEFT JOIN student s ON p.Person_ID = s.Person_ID '
+                . 'LEFT JOIN teacher t ON p.Person_ID = t.Person_ID '
+                . 'WHERE Username = ?';
+        $db = getDB();
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(1, $username);
+        $stmt->execute();
+        if ($stmt->rowCount() == 1) 
         {
-           $app->response->setStatus(401);
-            //return $response;// i think dinky donky app 
+            $person = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+        if (password_verify($password, $person['Password']))
+            {   
+                
+                $token = uniqid();
+                $sql = 'UPDATE person SET Token = ? WHERE Person_ID = ?';
+                $stmt = $db->prepare($sql);
+                $stmt->bindParam(1, $token);
+                $stmt->bindParam(2, $person['Person_ID']);    
+                $stmt->execute();
+                //echo json_encode($person);
+                if ($person['Student_ID'] != NULL)
+                    {   
+                        $latest_scrum = getLatestScrum($person['Student_ID']);
+                        
+                        $student = array(
+                            'User' => array(
+                                    'Firstname' => $person['Firstname'],
+                                    'Lastname' => $person['Lastname'],
+                                    'Infix' => $person['Infix'],
+                                    'Person_ID' => $person['Person_ID'],
+                                    'Student_ID' => $person['Student_ID'],
+                                    'Class' => $person['Class'],
+                                    'Seating' => $person['Seating'],   
+                                    'Last_Submitted_Scrumlog' => $latest_scrum['Date']
+                            ),
+                            'Token' => $token,
+                            'Userlevel' => 'Student'
+    					);
+                        $response = $app->response();                    
+                        $response['Content-Type'] = 'application/json';
+                        $response->body(json_encode($student));
+
+                        
+                        return $response; // i think dinky donky
+                    }
+                else
+                    {
+                        $teacher = array(
+    					'User' => array(
+    						'Firstname' => $person['Firstname'],
+    						'Lastname' => $person['Lastname'],
+    						'Infix' => $person['Infix'],
+    						'Person_ID' => $person['Person_ID'],
+    						'Teacher_ID' => $person['Teacher_ID']
+    					),						
+                        'Success' => TRUE,
+                        'Token' => $token,
+    					'Userlevel' => 'Teacher'
+                        );
+                        $response = $app->response();
+                        $response['Content-Type'] = 'application/json';
+                        $response->body(json_encode($teacher));
+                        return $response;
+                        
+                        
+                    }
+            }
+            else
+            {
+               $app->response->setStatus(401);
+                //return $response;// i think dinky donky app 
+            }
         }
-    }
-    else 
-    {
-        $app->response->setStatus(401);
-         //return $response;// i think dinky donky app 
+        else 
+        {
+            $app->response->setStatus(401);
+             //return $response;// i think dinky donky app 
     }
 
     });
@@ -508,6 +508,67 @@
             return $response;
         };
     });
+
+    $app->post('/api/updateCycle', 'middleWare', function() use ($app){
+        $number = $app->request->params('Number');
+        $start = $app->request->params('Start_Date');
+        $end = $app->request->params('End_Date');
+        $id = $app->request->params('Cycle_ID');
+
+        $sql = "UPDATE cycle SET Number=?, Start_Date=?, End_Date=? WHERE cycle_ID=?";
+
+        $db = getDB();
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(1, $number);
+        $stmt->bindValue(2, $start);
+        $stmt->bindValue(3, $end);
+        $stmt->bindValue(4, $id);
+        $stmt->execute();
+
+        $res = array("Success" => TRUE);
+        $response = $app->response();
+        $response['Content-Type'] = 'application/json';
+        $response->body(json_encode($res));
+        return $response;
+
+        
+    });
+
+    $app->post('/api/submitComment', 'middleWare', function() use ($app){
+        $text = $app->request->params('text');
+        $teacher_ID = $app->request->params('teacher');
+        $scrumlog_ID = $app->request->params('scrumlog');
+
+        $sql = "UPDATE scrumlog set Teacher_ID=?, Remark=?, Completed=FALSE WHERE Scrumlog_ID=?";
+
+        $db = getDB();
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(1, $teacher_ID);
+        $stmt->bindValue(2, $text);
+        $stmt->bindValue(3, $scrumlog_ID);
+        $stmt->execute();
+    });
+
+    $app->get('/api/getAllComments', function() use ($app){
+        $teacher_ID = $app->request->params('teacher_ID');
+
+        $sql = "SELECT sc.Remark, sc.Teacher_ID, sc.Completed, p.Firstname, p.Lastname, p.Infix ";
+        $sql .= "FROM scrumlog sc LEFT JOIN student st ON sc.Student_ID=st.Student_ID ";
+        $sql .= "LEFT JOIN person p ON st.Person_ID=p.Person_ID ";
+        $sql .= "WHERE sc.Teacher_ID=?";
+
+        $db = getDB();
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(1, $teacher_ID);
+        $stmt->execute();  
+
+        $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $response = $app->response();
+        $response['Content-Type'] = 'application/json';
+        $response->body(json_encode($comments));
+        return $response;
+    });
 	$app->run();
     
     function getLatestScrum($student_ID)
@@ -542,6 +603,6 @@
             return false;
         };
         $db->rollBack();
-
     };
+
     ?>
