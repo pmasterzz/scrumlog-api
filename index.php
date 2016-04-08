@@ -88,7 +88,7 @@
         $filterArray = array($date);
 
         $sql = "SELECT sc.Input_Yesterday, sc.Input_Help, sc.Input_Today, sc.Input_Problems, sc.Radio_Help,";
-		$sql .= " sc.Scrumlog_ID, sc.Date, sc.Cycle_ID, sc.Seating, st.Student_ID, p.Firstname, p.Lastname, p.Infix";
+		$sql .= " sc.Scrumlog_ID, sc.Date, sc.Cycle_ID, sc.Seating, st.Student_ID, p.Firstname, p.Lastname, p.Infix, sc.Remark";
 		$sql .= " FROM scrumlog sc LEFT JOIN student st ON sc.Student_ID=st.Student_ID";
 		$sql .= " LEFT JOIN person p ON st.Person_ID=p.Person_ID";
 		$sql .= " WHERE sc.Date = ?";
@@ -137,7 +137,7 @@
 		else{
         $scrumlog = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		
-		if($scrumlog[0]['Radio_Help'] !== '-')
+		if($scrumlog[0]['Radio_Help'] !== '-' && $scrumlog[0]['Radio_Help'] !== NULL)
 			$scrumlog[0]['Radio_Help'] = GetTeacherNameById($scrumlog[0]['Radio_Help']);
 	
 		$response = $app->response();
@@ -547,6 +547,27 @@
         $stmt->bindValue(2, $text);
         $stmt->bindValue(3, $scrumlog_ID);
         $stmt->execute();
+    });
+
+    $app->get('/api/getAllComments', function() use ($app){
+        $teacher_ID = $app->request->params('teacher_ID');
+
+        $sql = "SELECT sc.Remark, sc.Teacher_ID, sc.Completed, p.Firstname, p.Lastname, p.Infix ";
+        $sql .= "FROM scrumlog sc LEFT JOIN student st ON sc.Student_ID=st.Student_ID ";
+        $sql .= "LEFT JOIN person p ON st.Person_ID=p.Person_ID ";
+        $sql .= "WHERE sc.Teacher_ID=?";
+
+        $db = getDB();
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(1, $teacher_ID);
+        $stmt->execute();  
+
+        $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $response = $app->response();
+        $response['Content-Type'] = 'application/json';
+        $response->body(json_encode($comments));
+        return $response;
     });
 	$app->run();
     
