@@ -87,6 +87,8 @@
 		$cycle_ID = $app->request->params('cycle_ID');
         $filterArray = array($date);
 
+
+
         $sql = "SELECT sc.Input_Yesterday, sc.Input_Help, sc.Input_Today, sc.Input_Problems, sc.Radio_Help,";
 		$sql .= " sc.Scrumlog_ID, sc.Date, sc.Cycle_ID, sc.Seating, st.Student_ID, p.Firstname, p.Lastname, p.Infix, sc.Remark";
 		$sql .= " FROM scrumlog sc LEFT JOIN student st ON sc.Student_ID=st.Student_ID";
@@ -124,6 +126,8 @@
            $stmt->bindValue(($k+1), $v); 
         }  
 		$stmt->execute();
+
+        //var_dump($stmt->fetchAll(PDO::FETCH_ASSOC));
 		if($stmt->rowCount() == 0){
 			$res = array(
                'Success' => FALSE
@@ -552,10 +556,10 @@
     $app->get('/api/getAllComments', function() use ($app){
         $teacher_ID = $app->request->params('teacher_ID');
 
-        $sql = "SELECT sc.Remark, sc.Teacher_ID, sc.Completed, p.Firstname, p.Lastname, p.Infix ";
+        $sql = "SELECT sc.Remark, sc.Teacher_ID, sc.Completed, p.Firstname, p.Lastname, p.Infix, sc.Scrumlog_ID ";
         $sql .= "FROM scrumlog sc LEFT JOIN student st ON sc.Student_ID=st.Student_ID ";
         $sql .= "LEFT JOIN person p ON st.Person_ID=p.Person_ID ";
-        $sql .= "WHERE sc.Teacher_ID=?";
+        $sql .= "WHERE sc.Teacher_ID=? AND sc.Date=CURDATE()";
 
         $db = getDB();
         $stmt = $db->prepare($sql);
@@ -569,6 +573,17 @@
         $response->body(json_encode($comments));
         return $response;
     });
+    
+    $app->put('/api/completeTodo', function() use ($app){
+        $id = $app->request->params('scrumlog_ID');
+        
+        $sql = "UPDATE scrumlog SET Completed=TRUE WHERE Scrumlog_ID=?";
+        $db = getDB();
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(1, $id);
+        $stmt->execute(); 
+    });
+    
 	$app->run();
     
     function getLatestScrum($student_ID)
