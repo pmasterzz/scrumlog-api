@@ -565,7 +565,7 @@
         $stmt = $db->prepare($sql);
         $stmt->bindValue(1, $teacher_ID);
         $stmt->execute();  
-
+        //random comment
         $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $response = $app->response();
