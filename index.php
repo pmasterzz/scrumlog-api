@@ -238,7 +238,6 @@
 	
         $students = $app->request->params('studentArray');
 		$studentArray = explode(",", $students);
-		var_dump($studentArray);
         $inQuery = implode(',', array_fill(0, count($studentArray), '?'));
         $db = getDB();
         $seat = $app->request->params('seating');
@@ -553,17 +552,18 @@
         $stmt->execute();
     });
 
-    $app->get('/api/getAllComments', function() use ($app){
+    $app->get('/api/getAllTodos', function() use ($app){
         $teacher_ID = $app->request->params('teacher_ID');
 
-        $sql = "SELECT sc.Remark, sc.Teacher_ID, sc.Completed, p.Firstname, p.Lastname, p.Infix, sc.Scrumlog_ID ";
+        $sql = "SELECT sc.Remark, sc.Teacher_ID, sc.Completed, p.Firstname, p.Lastname, p.Infix, sc.Scrumlog_ID, sc.Input_Help ";
         $sql .= "FROM scrumlog sc LEFT JOIN student st ON sc.Student_ID=st.Student_ID ";
         $sql .= "LEFT JOIN person p ON st.Person_ID=p.Person_ID ";
-        $sql .= "WHERE sc.Teacher_ID=? AND sc.Date=CURDATE()";
+        $sql .= "WHERE (sc.Teacher_ID=:id OR sc.Radio_Help=:id) AND sc.Date=CURDATE()";
 
         $db = getDB();
         $stmt = $db->prepare($sql);
-        $stmt->bindValue(1, $teacher_ID);
+        $stmt->bindParam(':id', $teacher_ID);
+        //$stmt->bindValue(1, $teacher_ID);
         $stmt->execute();  
         //random comment
         $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -1,11 +1,23 @@
 <?php
 
 session_start();
+
+
+
     if(isset($_POST['submit'])) {
-        $_SESSION['login'] = 'ingelogd';
-        login();
-        //header("Location: ../home.php?page=scrumloginvullen");
         
+        $isLoggedIn = login();
+        if($isLoggedIn){
+           $_SESSION['login'] = 'ingelogd'; 
+          
+
+           header("Location: ../home.php?page=scrumloginvullen");
+        }
+        else{
+           header("Location: ../index.php");
+        }
+       
+            
     }
     else{
        header("Location: http://www.google.nl");
@@ -17,7 +29,7 @@ function login(){
             'password' => urlencode($_POST['form-password']),
     );
 
-    $fields_string = "";
+    $fields_string="";
     //url-ify the data for the POST
     foreach($fields as $key=>$value) { $fields_string .= $key.'='.$value.'&'; }
     rtrim($fields_string, '&');
@@ -29,17 +41,27 @@ function login(){
     curl_setopt($ch,CURLOPT_URL, $url);
     curl_setopt($ch,CURLOPT_POST, count($fields));
     curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-
+     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+     
     //execute post
     $result = curl_exec($ch);
+  
+    $result = json_decode($result, TRUE);
 
-    curl_close($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-    $res = json_decode($result, true);
-
-    echo $res['Token'];
-
+    if($httpCode === 401){
+        return FALSE;
+    }
+    else if($httpCode === 200){
+        
+        $_SESSION['Token'] = $result['Token'];
+        
+        $_SESSION['User'] = $result['User'];
+        $_SESSION['Userlevel'] = $result['Userlevel'];
+        return TRUE;
+    }
+ 
     //close connection
-    
+    curl_close($ch);
 }

@@ -8,6 +8,8 @@ if (!isset($_SESSION['login'])){
     header("Location: index.php");
 }
 
+
+
 ?>
 
 <!DOCTYPE html>
@@ -21,7 +23,7 @@ if (!isset($_SESSION['login'])){
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Simple Sidebar - Start Bootstrap Template</title>
+    <title>Scrumlog!</title>
 
     <!-- Bootstrap Core CSS -->
     <link href="assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -51,10 +53,10 @@ if (!isset($_SESSION['login'])){
                     </a>
                 </li>
                 <li>
-                    <a href="#">Scrumlog invullen</a>
+                    <a href="?page=scrumlogInvullen">Scrumlog invullen</a>
                 </li>
                 <li>
-                    <a href="#">Scrumlog inzien</a>
+                    <a href="?page=scrumlogInzien">Scrumlog inzien</a>
                 </li>
 
                 
@@ -70,11 +72,11 @@ if (!isset($_SESSION['login'])){
 
         if (isset($_GET['page'])){
             switch($_GET['page']){
-                case 'scrumloginvullen':
+                case 'scrumlogInvullen':
                     include 'includes/scrumloginvullen.inc.php';
                     break;
-                case 'scrumloginzien':
-                    include 'includes/scrumlogsinzien.inc.php';
+                case 'scrumlogInzien':
+                    include 'includes/scrumlogInzien.inc.php';
                     break;
                 case 'allescrumloginzien':
                     include 'includes/allescrumlogsinzien.inc.php';
